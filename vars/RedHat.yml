@@ -50,12 +50,12 @@ libvirt_host_custom_yum_repos_efi_by_version:
     - name: qemu-firmware-jenkins
       description: upstream OVMF firmware images
       baseurl: https://www.kraxel.org/repos/jenkins/
-      gpgcheck: no
+      gpgcheck: false
     # Need an updated version of qemu with smm support
     - name: centos-qemu-ev
       description: CentOS-$releasever - QEMU EV
       baseurl: http://mirror.centos.org/$contentdir/$releasever/virt/$basearch/kvm-common/
-      gpgcheck: yes
+      gpgcheck: true
   8: []
   9: []
   10: []
@@ -70,4 +70,4 @@ libvirt_host_lineinfile_extra_rules:
       insertafter: '^#LIBVIRTD_ARGS='
       regexp: '^LIBVIRTD_ARGS='
       line: LIBVIRTD_ARGS="{{ libvirt_host_libvirtd_args }}"
-    condition: "{{ libvirt_host_libvirtd_args is truthy }}" 
+    condition: "{{ libvirt_host_libvirtd_args is truthy }}"

@@ -2,17 +2,17 @@
 # Configure services - runs after the install stage
 
 - name: Create directory for libvirt socket
-  file:
+  ansible.builtin.file:
     state: directory
     path: "{{ libvirt_host_socket_dir }}"
     owner: root
     group: root
-    mode: 0755
+    mode: "0755"
   become: true
   when: libvirt_host_socket_dir is truthy
 
 - name: Process lineinfile rules
-  lineinfile: "{{ rule.args }}"
+  ansible.builtin.lineinfile: "{{ rule.args }}"
   become: true
   loop: "{{ libvirt_host_lineinfile_extra_rules | default([]) }}"
   loop_control:
@@ -22,12 +22,12 @@
     - restart libvirt
 
 - name: Ensure configuration files exist
-  template:
+  ansible.builtin.template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   become: true
   loop: "{{ _libvirt_config_files | selectattr('enabled') }}"
   loop_control:
@@ -47,12 +47,12 @@
     - restart libvirt
 
 - name: Create systemd drop-in directory for socket listen address
-  file:
+  ansible.builtin.file:
     path: "/etc/systemd/system/{{ item.service }}.d"
     state: directory
     owner: root
     group: root
-    mode: 0755
+    mode: "0755"
   become: true
   loop: "{{ _libvirt_socket_services | selectattr('enabled') }}"
   when:
@@ -63,12 +63,12 @@
     _libvirt_listen_stream: "{{ item.listen_address }}"
 
 - name: Configure socket listen address
-  template:
+  ansible.builtin.template:
     src: socket.j2
     dest: "/etc/systemd/system/{{ item.service }}.d/listen-address.conf"
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   become: true
   loop: "{{ _libvirt_socket_services | selectattr('enabled') }}"
   when:
@@ -82,12 +82,12 @@
     - restart libvirt
 
 - name: Create directory for Libvirt TLS certificates and keys
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: directory
     owner: root
     group: root
-    mode: 0700
+    mode: "0700"
   become: true
   loop: >-
     {{ _libvirt_tls_certs.values() |
@@ -99,7 +99,7 @@
     - libvirt_host_tls_listen | bool
 
 - name: Copy Libvirt TLS certificates and keys
-  copy:
+  ansible.builtin.copy:
     content: "{{ _libvirt_loop_item.content }}"
     dest: "{{ _libvirt_loop_item.dest }}"
     owner: root
@@ -117,7 +117,7 @@
   notify: restart libvirt
 
 - name: Ensure libvirt SASL user exists
-  shell:
+  ansible.builtin.shell:
     cmd: >
       set -o pipefail &&
       echo {{ item.password }} |
@@ -130,12 +130,12 @@
   when: libvirt_host_enable_sasl_support | bool
 
 - name: Create directory for QEMU TLS certificates and keys
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: directory
     owner: "{{ libvirt_host_qemu_user }}"
     group: "{{ libvirt_host_qemu_group }}"
-    mode: 0700
+    mode: "0700"
   become: true
   loop: >-
     {{ _libvirt_host_qemu_tls_certs.values() |
@@ -147,7 +147,7 @@
     - libvirt_host_qemu_tls_enabled | bool
 
 - name: Copy QEMU TLS certificates and keys
-  copy:
+  ansible.builtin.copy:
     content: "{{ _libvirt_host_qemu_loop_item.content }}"
     dest: "{{ _libvirt_host_qemu_loop_item.dest }}"
     owner: "{{ libvirt_host_qemu_user }}"
@@ -165,12 +165,12 @@
   notify: restart libvirt
 
 - name: Create directory for Libvirt VNC TLS certificates and keys
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: directory
     owner: "{{ libvirt_host_qemu_user }}"
     group: "{{ libvirt_host_qemu_group }}"
-    mode: 0700
+    mode: "0700"
   become: true
   loop: >-
     {{ _libvirt_host_vnc_tls_certs.values() |
@@ -182,7 +182,7 @@
     - libvirt_host_vnc_tls_enabled | bool
 
 - name: Copy Libvirt VNC TLS certificates and keys
-  copy:
+  ansible.builtin.copy:
     content: "{{ _libvirt_host_vnc_loop_item.content }}"
     dest: "{{ _libvirt_host_vnc_loop_item.dest }}"
     owner: "{{ libvirt_host_qemu_user }}"
@@ -200,14 +200,14 @@
   notify: restart libvirt
 
 - name: Flush handlers
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers
 
 - name: Ensure the libvirt daemon is started and enabled
-  service:
+  ansible.builtin.service:
     name: "{{ item.service }}"
     state: "{{ item.enabled | bool | ternary('started', 'stopped') }}"
     enabled: "{{ item.enabled | bool }}"
-  become: True
+  become: true
   loop: "{{ _libvirt_services }}"
   loop_control:
     label: "{{ item.service }}"
